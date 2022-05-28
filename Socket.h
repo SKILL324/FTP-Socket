@@ -46,9 +46,9 @@ struct sockdata
 {
 	SOCKET				*sock;
 	char				*sockinfo;
-	struct addrinfo		*addr;
-	pthread_mutex_t		*self_mutex;
-	pthread_mutex_t		*request_mutex;
+	struct addrinfo		        *addr;
+	pthread_mutex_t		        *self_mutex;
+	pthread_mutex_t		        *request_mutex;
 	pthread_t			Tctor, Tdtor, Tinfo, Tstart;
 	pthread_t			Trequest;
 };
@@ -69,8 +69,8 @@ union ptrfuncx
 };
 struct tsock
 {
-	int					size;
-	void				**pp_void;
+	int			size;
+	void			**pp_void;
 	pthread_mutex_t		*mutex;
 
 	union ptrfuncx;
