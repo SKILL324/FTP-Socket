@@ -7,8 +7,6 @@ int main()
 	if (WsaCtor()) { return(1); }
 
 	void *result;
-	char *sendbuffer = "sendfrom client1 to hostclient";
-	int sendsize = strlen(sendbuffer);
 
 	sockServer *server;
 	server = ServerInit();
@@ -18,7 +16,7 @@ int main()
 	result = server->start(server);
 	if (!result) { return(1); }
 	
-	printf("Servidor Online\n\n");
+	printf("Server Online\n\n");
 
 	sockClient *client1;
 	client1 = ClientInit();
@@ -30,18 +28,18 @@ int main()
 	if(result)
 		printf("Client1 Connected\n\n");
 
-	/*result = client1->request(client1, "GET aa.png");
+	result = client1->request(client1, "GET aa.png");
 	result = client1->get(result);
 	if(result)
 		printf("GET SUCESS\n");
 	else
-		printf("GET FAILED\n");*/
-	result = client1->request(client1, "SET aa.png");
+		printf("GET FAILED\n");
+	/*result = client1->request(client1, "SET aa.png");
 	result = client1->get(result);
 	if (result)
 		printf("SET SUCESS\n");
 	else
 		printf("SET FAILED\n");
-	//Sleep(10000000000000);
+	Sleep(10000000000000);*/
 	return(0);
 }
