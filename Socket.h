@@ -2,8 +2,8 @@
 // socklist == LIFO list 
 // tsocket == threaded behavior;
 // init == alloc and zero out;
-// ctor == fill with data;			 ---|
-// dtor == destroy and free			 ---|	return
+// ctor == fill with data;           ---|
+// dtor == destroy and free          ---|	return
 // info == all info about the socket ---|	Handle to thread
 // start == do ya thang              ---|
 // get == get data returned from thread
