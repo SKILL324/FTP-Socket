@@ -109,7 +109,6 @@ static void *SockListDtor(void **pp_self)
 	
 	(*pp_socklist)->self = NULL;
 	free((*pp_socklist));
-	(*pp_socklist) = NULL;
 	return(VALID);
 }
 static void *SockListRemove(void *pp_self, void *data)
@@ -146,7 +145,6 @@ static void *SockListRemove(void *pp_self, void *data)
 
 	SockListDtor(&p_list);
 	free(p_list);
-	p_list = NULL;
 
 	return(VALID);
 }
@@ -215,10 +213,7 @@ static void *SockInfoDtor(void *self)
 	p_sockinfo->self = NULL;
 	
 	free(p_sockinfo->sock);
-	p_sockinfo->sock = NULL;
-
 	free(p_sockinfo);
-	p_sockinfo = NULL;
 
 	return(VALID);
 }
@@ -412,17 +407,13 @@ static void *ServerDtor(void *self)
 	_data = (sockData *)server->data;
 
 	_data->self_mutex = NULL;
+	server->self = NULL;
 
 	freeaddrinfo(_data->addr);
 	free(_data->sockinfo);
 	closesocket(*(_data)->sock);
-	*(_data)->sock = INVALID_SOCKET;
 	free(_data->sock);
-	_data->sock = NULL;
-
-	server->self = NULL;
 	free(server);
-	server = NULL;
 
 	return(VALID);
 }
@@ -436,17 +427,13 @@ static void *ClientDtor(void *self)
 	_data = (sockData *)client->data;
 
 	_data->self_mutex = NULL;
+	client->self = NULL;
 
 	freeaddrinfo(_data->addr);
 	free(_data->sockinfo);
 	closesocket(*(_data)->sock);
-	*(_data)->sock = INVALID_SOCKET;
 	free(_data->sock);
-	_data->sock = NULL;
-
-	client->self = NULL;
 	free(client);
-	client = NULL;
 
 	return(VALID);
 }
@@ -492,7 +479,6 @@ static void *SockDataInfo(void* self)
 		tmp_buffer[i] = NULL;
 	}
 	free(tmp_buffer);
-	tmp_buffer = NULL;
 
 	_data->sockinfo = buffer;
 

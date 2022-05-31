@@ -28,7 +28,7 @@ int main()
 	if(result)
 		printf("Client1 Connected\n\n");
 
-	result = client1->request(client1, "MPUT a.png");
+	result = client1->request(client1, "MPUT aa.png aaa.png");
 	result = client1->get(result);
 	if(result)
 		printf("MPUT SUCESS\n");

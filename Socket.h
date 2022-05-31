@@ -34,23 +34,23 @@ struct socklist;
 enum   socklisttype;
 struct sockinfo;
 
-typedef struct sockdata			sockData;
-typedef struct sockserver		sockServer;
-typedef struct sockclient		sockClient;
-typedef struct socklist			sockList;
-typedef struct tsock			Tsocket;
-typedef enum   socklisttype		socklistType;
-typedef struct sockinfo			sockInfo;
+typedef struct sockdata       sockData;
+typedef struct sockserver     sockServer;
+typedef struct sockclient     sockClient;
+typedef struct socklist       sockList;
+typedef struct tsock          Tsocket;
+typedef enum   socklisttype   socklistType;
+typedef struct sockinfo       sockInfo;
 ///////////////////////////////////////////////////////////////////////////////
 struct sockdata
 {
-	SOCKET				*sock;
-	char				*sockinfo;
-	struct addrinfo		*addr;
-	pthread_mutex_t		*self_mutex;
-	pthread_mutex_t		*request_mutex;
-	pthread_t			Tctor, Tdtor, Tinfo, Tstart;
-	pthread_t			Trequest;
+	SOCKET              *sock;
+	char                *sockinfo;
+	struct addrinfo     *addr;
+	pthread_mutex_t     *self_mutex;
+	pthread_mutex_t     *request_mutex;
+	pthread_t           Tctor, Tdtor, Tinfo, Tstart;
+	pthread_t           Trequest;
 };
 struct sockbase
 {
@@ -69,42 +69,42 @@ union ptrfuncx
 };
 struct tsock
 {
-	int					size;
-	void				**pp_void;
-	pthread_mutex_t		*mutex;
+	int              size;
+	void             **pp_void;
+	pthread_mutex_t  *mutex;
 
 	union ptrfuncx;
 };
 struct sockserver
 {
-	sockServer	*self;
-	void		*(*start)(void *self);
+	sockServer  *self;
+	void        *(*start)(void *self);
 
 	struct sockbase;
 };
 struct sockclient
 {
-	sockClient	*self;
-	void		*(*connect)(void *self);
-	void		*(*request)(void *self, void *str_request);
+	sockClient  *self;
+	void        *(*connect)(void *self);
+	void        *(*request)(void *self, void *str_request);
 
 	struct sockbase;
 };
 struct socklist
 {
-	sockList		*self;
-	void			*data;
-	sockList		*last;
-	sockList		*next;
-	socklistType	sock_type;
+	sockList      *self;
+	void          *data;
+	sockList      *last;
+	sockList      *next;
+	socklistType  sock_type;
 };
 
 struct sockinfo
 {
-	sockInfo	*self;
-	SOCKET		*sock; 
-	pthread_t	Tsock;
-	char		*hostname;
+	sockInfo   *self;
+	SOCKET     *sock; 
+	pthread_t  Tsock;
+	char       *hostname;
 };
 enum socklisttype { SOCKT_NONE, SOCKT_SERVER, SOCKT_CLIENT, SOCKT_FILE, 
 				SOCKT_MAX};
@@ -141,7 +141,7 @@ static void *ClientRequest(void *, void *);
 
 static void *GetRequestItems(void *, void ***, size_t *);
 static void *ServerRequestPUT(void *, size_t);
-static void *ClientRequestPUT(void *, void*, size_t);
+static void *ClientRequestPUT(void *, void **, size_t);
 static void *ServerRequestGET(void *, size_t);
 static void *ClientRequestGET(void *, void **, size_t);
 
