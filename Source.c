@@ -28,18 +28,14 @@ int main()
 	if(result)
 		printf("Client1 Connected\n\n");
 
-	result = client1->request(client1, "GET aa.png");
+	result = client1->request(client1, "MPUT a.png");
 	result = client1->get(result);
 	if(result)
-		printf("GET SUCESS\n");
+		printf("MPUT SUCESS\n");
 	else
-		printf("GET FAILED\n");
-	/*result = client1->request(client1, "SET aa.png");
-	result = client1->get(result);
-	if (result)
-		printf("SET SUCESS\n");
-	else
-		printf("SET FAILED\n");
-	Sleep(10000000000000);*/
+		printf("MPUT FAILED\n");
+	
+
+	Sleep(1000000);
 	return(0);
 }

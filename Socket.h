@@ -46,9 +46,9 @@ struct sockdata
 {
 	SOCKET				*sock;
 	char				*sockinfo;
-	struct addrinfo		        *addr;
-	pthread_mutex_t		        *self_mutex;
-	pthread_mutex_t		        *request_mutex;
+	struct addrinfo		*addr;
+	pthread_mutex_t		*self_mutex;
+	pthread_mutex_t		*request_mutex;
 	pthread_t			Tctor, Tdtor, Tinfo, Tstart;
 	pthread_t			Trequest;
 };
@@ -69,8 +69,8 @@ union ptrfuncx
 };
 struct tsock
 {
-	int			size;
-	void			**pp_void;
+	int					size;
+	void				**pp_void;
 	pthread_mutex_t		*mutex;
 
 	union ptrfuncx;
@@ -139,12 +139,13 @@ static void *SockDataInfo(void *);
 static void *ServerRequest(void *);
 static void *ClientRequest(void *, void *);
 
-static void *DecryptRequest(void *, void **, void **, const void*);
-static void *ServerRequestSet(void *, void *);
-static void *ClientRequestSet(void *, void *, void *);
-static void *ServerRequestGet(void *, void *);
-static void *ClientRequestGet(void *, void *, void *);
+static void *GetRequestItems(void *, void ***, size_t *);
+static void *ServerRequestPUT(void *, size_t);
+static void *ClientRequestPUT(void *, void*, size_t);
+static void *ServerRequestGET(void *, size_t);
+static void *ClientRequestGET(void *, void **, size_t);
 
+static int recv_s(SOCKET, char *, int, int);
 static void *ThreadGet(void *);
 static void *ThreadCancel(void *);
 
@@ -162,12 +163,6 @@ static void *TServerStart(void *);
 static void *TClientConnect(void *);
 static void *TServerRequest(void *, void *);
 static void *TClientRequest(void *, void *);
-
-
-//VOID* RecData(void* arg);
-//
-//static VOID vParsedComma(char* vComma);
-//int* vToken();
 #endif
 
 
