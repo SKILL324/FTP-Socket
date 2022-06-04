@@ -1,41 +1,90 @@
 #include "Resource02.h"
 #include "Socket.h"
 ///////////////////////////////////////////////////////////////////////////////
+#define DEFAULT_BUFLEN 512
 ///////////////////////////////////////////////////////////////////////////////
 int main()
 {
-	if (WsaCtor()) { return(1); }
+	if (WsaCtor()) { return(NULL); }
 
-	void *result;
-
-	sockServer *server;
-	server = ServerInit();
-	if (!server) { return(1); }
-
-	server->ctor(server, "127.0.0.1", "22");
-	result = server->start(server);
-	if (!result) { return(1); }
+	sockServer *server = NULL;
+	sockClient *client = NULL;
 	
-	printf("Server Online\n\n");
+	void *result = NULL;
+	void *Tresult = NULL;
 
-	sockClient *client1;
-	client1 = ClientInit();
-	if (!client1) { return(1); }
+	char inputbuff[DEFAULT_BUFLEN] = {0};
+	int inputbuff_len = DEFAULT_BUFLEN;
 
-	client1->ctor(client1, "127.0.0.1", "22");
-	result = client1->connect(client1);
-	result = client1->get(result);
-	if(result)
-		printf("Client1 Connected\n\n");
+	int value = 0;
+	do
+	{
+		printf("CLIENT = 0 | SERVER = 1\n-->");
+		if (fgets(inputbuff, inputbuff_len, stdin) == NULL)
+		{
+			continue;
+		}
 
-	result = client1->request(client1, "MPUT aa.png aaa.png");
-	result = client1->get(result);
-	if(result)
-		printf("MPUT SUCESS\n");
-	else
-		printf("MPUT FAILED\n");
+		value = atoi(inputbuff);
+
+		if(value < 2 && value >= 0) { break; }
+
+	}while(1);
+
+	if (value)
+	{
+		do
+		{
+			printf("\nSERVER ADDRESS: ");
+			fflush(stdin);
+			if (fgets(inputbuff, inputbuff_len, stdin) == NULL)
+			{
+				continue;
+			}
+			else
+			{
+				inputbuff[strlen(inputbuff)-1] = '\0';
+				result = QuickServerFTP(&server, inputbuff);
+				if(!result) 
+				{ 
+					printf("DISCONECTED\n");
+					continue; 
+				}
+
+				break;
+			}
+
+
+		}while(1);
+
+	}
 	
+	client = ClientInit();
+	if(!client) { return(NULL); }
 
-	Sleep(1000000);
+	printf("\nClient Created!\n");
+
+	result = NULL;
+	int failed = 0;
+	do
+	{
+		printf("\n-->");
+		fflush(stdin);
+		if (fgets(inputbuff, inputbuff_len, stdin) == NULL)
+		{
+			continue;
+		}
+		
+		inputbuff[strlen(inputbuff)-1] = '\0';
+		printf("\n");
+
+		Tresult = client->request(client, inputbuff);
+		result = client->get(Tresult);
+		if(!result) { printf("ERROR\n"); }
+		else { printf("SUCESS\n"); }
+		memset(inputbuff, 0, inputbuff_len);
+
+	}while(!failed);
+	//failed++; 
 	return(0);
 }

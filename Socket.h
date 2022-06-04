@@ -15,10 +15,13 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <string.h>
 #pragma comment(lib, "Ws2_32.lib")
 #include <time.h>
 #include <conio.h>
 #include "pthread.h"
+#include "tinydir.h"
+
 
 #ifndef VALID
 #define VALID ((void *)1)
@@ -101,10 +104,11 @@ struct socklist
 
 struct sockinfo
 {
-	sockInfo   *self;
-	SOCKET     *sock; 
-	pthread_t  Tsock;
-	char       *hostname;
+	sockInfo  *self;
+	SOCKET    *sock; 
+	char      *current_dir;
+	char      *last_dir;
+	char      *hostname;
 };
 enum socklisttype { SOCKT_NONE, SOCKT_SERVER, SOCKT_CLIENT, SOCKT_FILE, 
 				SOCKT_MAX};
@@ -113,17 +117,17 @@ int WsaCtor();
 int WsaDtor();
 
 static sockList *SockListInit();
-static sockList **SockListNotNull(void *);
+static sockList **SockListNotNull(void **);
 static void *SockListCtor(void **,void *, int);
 static void *SockListDtor(void **);
 static void *SockListRemove(void *, void *);
-static void *SockListClear();
+static void *SockListClear(void *);
 
 static sockInfo *SockInfoInit();
 static sockInfo *SockInfoNotNull(void *);
 static void *SockInfoCtor(void *, void *);
 static void *SockInfoDtor(void *);
-static void *SockInfoSetHost(void *, void *, size_t);
+static void *SockInfoSetHost(void *, void *);
 
 sockServer *ServerInit();
 sockClient *ClientInit();
@@ -136,14 +140,31 @@ static void *ClientDtor(void *);
 static void *ServerStart(void *);
 static void *ClientConnect(void *);
 static void *SockDataInfo(void *);
-static void *ServerRequest(void *);
+static void *ServerRequest(void *, void *);
 static void *ClientRequest(void *, void *);
 
-static void *GetRequestItems(void *, void ***, size_t *);
-static void *ServerRequestPUT(void *, size_t);
-static void *ClientRequestPUT(void *, void **, size_t);
-static void *ServerRequestGET(void *, size_t);
-static void *ClientRequestGET(void *, void **, size_t);
+static void *FindDir(void *, void *, void *);
+static void *FileNamesOnDir(void *, void ***, u_long *);
+static void *GetRequestItems(void *, void ***, u_long *);
+
+static void *ServerRequestLS(void *);
+static void *ClientRequestLS(void *);
+static void *ServerRequestCD(void *);
+static void *ClientRequestCD(void *, void *, u_long);
+static void *ClientRequestCLS();
+static void *ServerRequestPWD(void *);
+static void *ClientRequestPWD(void *);
+static void *ServerRequestPUT(void *, u_long);
+static void *ClientRequestPUT(void *, void **, u_long);
+static void *ServerRequestGET(void *, u_long);
+static void *ClientRequestGET(void *, void **, u_long);
+static void *ServerRequestMPUT(void *);
+static void *ClientRequestMPUT(void *, void **, u_long);
+static void *ServerRequestMGET(void *);
+static void *ClientRequestMGET(void *, void **, u_long);
+static void *ClientRequestOPEN(void *, void *);
+static void *ClientRequestCLOSE(void *);
+static void *ClientRequestHELP();
 
 static int recv_s(SOCKET, char *, int, int);
 static void *ThreadGet(void *);
@@ -161,8 +182,10 @@ static void *TServerDtor(void *);
 static void *TClientDtor(void *);
 static void *TServerStart(void *);
 static void *TClientConnect(void *);
-static void *TServerRequest(void *, void *);
+static void *TServerRequest(void *, void *, void *);
 static void *TClientRequest(void *, void *);
+
+void *QuickServerFTP(void **, void *);
 #endif
 
 
