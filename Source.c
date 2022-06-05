@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #define DEFAULT_BUFLEN 512
 ///////////////////////////////////////////////////////////////////////////////
-int main()
+int main(int argc, char **argv)
 {
 	if (WsaCtor()) { return(NULL); }
 
@@ -25,9 +25,8 @@ int main()
 			continue;
 		}
 
-		value = atoi(inputbuff);
-
-		if(value < 2 && value >= 0) { break; }
+		if(inputbuff[0] == '1') { value++; break; }
+		if(inputbuff[0] == '0') { break; }
 
 	}while(1);
 

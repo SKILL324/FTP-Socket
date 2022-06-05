@@ -51,7 +51,6 @@ struct sockdata
 	char                *sockinfo;
 	struct addrinfo     *addr;
 	pthread_mutex_t     *self_mutex;
-	pthread_mutex_t     *request_mutex;
 	pthread_t           Tctor, Tdtor, Tinfo, Tstart;
 	pthread_t           Trequest;
 };
