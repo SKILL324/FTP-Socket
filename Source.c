@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 		Tresult = client->request(client, inputbuff);
 		result = client->get(Tresult);
 		if(!result) { printf("ERROR\n"); }
-		else { printf("SUCESS\n"); }
+		else { printf("SUCCESS\n"); }
 		memset(inputbuff, 0, inputbuff_len);
 
 	}while(!failed);

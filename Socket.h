@@ -1,5 +1,5 @@
 // WSA == WSADATA (winsock lib)
-// socklist == LIFO list 
+// socklist == list
 // tsocket == threaded behavior;
 // init == alloc and zero out;
 // ctor == fill with data;           ---|
@@ -33,6 +33,7 @@ union  ptrfuncx;
 struct tsock;
 struct sockserver;
 struct sockclient;
+struct node; 
 struct socklist;
 enum   socklisttype;
 struct sockinfo;
@@ -40,6 +41,7 @@ struct sockinfo;
 typedef struct sockdata       sockData;
 typedef struct sockserver     sockServer;
 typedef struct sockclient     sockClient;
+typedef struct node           Node;
 typedef struct socklist       sockList;
 typedef struct tsock          Tsocket;
 typedef enum   socklisttype   socklistType;
@@ -92,13 +94,17 @@ struct sockclient
 
 	struct sockbase;
 };
+struct node
+{
+	void *data;
+	Node *next;
+	void *(*DataDtor)(void *);
+};
+
 struct socklist
 {
-	sockList      *self;
-	void          *data;
-	sockList      *last;
-	sockList      *next;
-	socklistType  sock_type;
+	Node            *head;
+	size_t          size;
 };
 
 struct sockinfo
@@ -115,10 +121,14 @@ enum socklisttype { SOCKT_NONE, SOCKT_SERVER, SOCKT_CLIENT, SOCKT_FILE,
 int WsaCtor();
 int WsaDtor();
 
+static Node *NodeInit();
+static void *NodeCtor(void *, void *, void *(*)(void *));
+static void *NodeDtor(void *);
+
 static sockList *SockListInit();
-static sockList **SockListNotNull(void **);
-static void *SockListCtor(void **,void *, int);
-static void *SockListDtor(void **);
+static void *SockListAdd(void *,void *, void *);
+static void *SockListNext(void *,void **);
+static void *SockListDtor(void *);
 static void *SockListRemove(void *, void *);
 static void *SockListClear(void *);
 
@@ -139,7 +149,7 @@ static void *ClientDtor(void *);
 static void *ServerStart(void *);
 static void *ClientConnect(void *);
 static void *SockDataInfo(void *);
-static void *ServerRequest(void *, void *);
+static void *ServerRequest(void *);
 static void *ClientRequest(void *, void *);
 
 static void *FindDir(void *, void *, void *);

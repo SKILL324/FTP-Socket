@@ -39,140 +39,170 @@ int WsaDtor()
 	return(0);
 }
 
+static Node *NodeInit()
+{
+	Node *p_node;
+	p_node = calloc(1, sizeof(*p_node));
+	if(!p_node) { return(NULL); }
+
+	return(p_node);
+}
+static void *NodeCtor(void *_self, void *_data, void *(*DataDtor)(void *))
+{
+	Node *p_node;
+	p_node = (Node *)_self;
+
+	if(!p_node) { return(NULL); }
+
+	p_node->data = _data;
+	p_node->DataDtor = DataDtor;
+	p_node->next = NULL;
+
+	return(VALID);
+}
+static void *NodeDtor(void *_self)
+{
+	Node *p_node;
+	p_node = (Node *)_self;
+
+	if(!p_node) { return(NULL); }
+
+	p_node->DataDtor(p_node->data);
+
+	free(p_node);
+
+	return(NULL);
+}
+
 static sockList *SockListInit()
 {
-	sockList *p_socklist = NULL;
+	sockList *p_socklist;
 	p_socklist = calloc(1,sizeof(*p_socklist));
 	if (!p_socklist) { return(NULL); }
+
+	return(p_socklist);
+}
+static void *SockListAdd(void *_self,void *_data, void *DataDtor)
+{
+	sockList *p_socklist;
+	p_socklist = (sockList*)_self;
+
+	void *(*p_DataDtor)(void *) = DataDtor;
+
+	if(!p_socklist || !_data) { return(NULL); }
 	
-	p_socklist->self = p_socklist;
+	Node **pp_node;
+	pp_node = &p_socklist->head;
 
-	return(p_socklist);
-}
-static sockList **SockListNotNull(void **pp_self)
-{
-	sockList **p_socklist;
-	p_socklist = (sockList **)pp_self;
+	while (*pp_node != NULL)
+	{
+		pp_node = &(*pp_node)->next;
+	}
 
-	if (!(*p_socklist) || !(*p_socklist)->self) { return(NULL); }
+	*pp_node = NodeInit();
+	if(!*pp_node) { return(NULL); }
 
-	return(p_socklist);
-}
-static void *SockListCtor(void **pp_self,void *_data, int _type)
-{
-	sockList **pp_socklist;
-	pp_socklist = SockListNotNull(pp_self);
+	void *result;
+	result = NodeCtor(*pp_node, _data, p_DataDtor);
+	if(!result) { return(NULL); }
 
-	if (!pp_socklist || !_data || _type >= SOCKT_MAX) { return(NULL); }
-
-	(*pp_socklist)->data = _data;
-	(*pp_socklist)->sock_type = (socklistType)_type;
-
-	(*pp_socklist)->next = SockListInit();
-	if (!(*pp_socklist)->next) { return(NULL); }
-
-	(*pp_socklist)->next->last = (*pp_socklist);
-
-	(*pp_socklist) = (*pp_socklist)->next;
+	p_socklist->size++;
 
 	return(VALID);
 }
-static void *SockListDtor(void **pp_self)
+static void *SockListNext(void *_self,void **_iterator)
 {
-	sockList **pp_socklist = NULL;
-	pp_socklist = SockListNotNull(pp_self);
+	sockList *p_socklist;
+	p_socklist = (sockList *)_self;
 
-	if(!pp_socklist) { return(NULL); }
+	Node **pp_iterator;
+	pp_iterator = (Node **)_iterator;
 
-	void *p_data;
-	p_data = (*pp_socklist)->data;
+	if(!p_socklist) { return(NULL); }
 
-	switch ((*pp_socklist)->sock_type)
+	Node *p_node;
+	if (*pp_iterator == NULL)
 	{
-	case SOCKT_SERVER:
+		p_node = p_socklist->head;
+	}
+	else
 	{
-		ServerDtor(p_data);
-	}break;
+		p_node = *pp_iterator;
+		p_node = p_node->next;
+	}
 
-	case SOCKT_CLIENT:
-	{
-		ClientDtor(p_data);
-	}break;
+	*pp_iterator = p_node;
+	return(p_node);
+}
+static void *SockListDtor(void *_self)
+{
+	sockList *p_socklist;
+	p_socklist = (sockList *)_self;
 
-	case SOCKT_FILE:
+	if(!p_socklist) { return(NULL); }
+
+	free(p_socklist);
+
+	return(VALID);
+}
+static void *SockListRemove(void *_self, void *_data)
+{	
+	sockList *p_socklist;
+	p_socklist = (sockList*)_self;
+
+	if(!p_socklist || !_data) { return(NULL); }
+
+	Node *p_node, *tmp_node;
+	p_node = tmp_node = p_socklist->head;
+
+	int failed = 0;
+	do
 	{
-		SockInfoDtor(p_data);
-	}break;
-		
-	default:
+		int found = 0;
+		while(p_node != NULL)
+		{
+			if(p_node->data == _data) { found++; break; }
+
+			tmp_node = p_node;
+			p_node = p_node->next;
+		}
+
+		if(!found) { failed++; break; }
+	
+		tmp_node->next = p_node->next;
+
+		void *result;
+		result = NodeDtor(p_node);
+		if(!result) { failed++; break; }
+
+	}while(0);
+	
+
+	if (failed)
 	{
 		return(NULL);
-	}break;
-		
-	}//switch-end
-	
-	(*pp_socklist)->self = NULL;
-	free((*pp_socklist));
+	}
 
 	return(VALID);
 }
-static void *SockListRemove(void *pp_self, void *_data)
-{
-	sockList *p_list;
-	p_list = (sockList *)pp_self;
-
-	int found = 0;
-
-	while (p_list)
-	{
-		if (p_list->data == _data)
-		{
-			found = 1;
-			break;
-		}
-		p_list = p_list->last;	
-	}
-
-	if (!found) { return(NULL); }
-	
-	if (p_list->last)
-	{
-		p_list->last->next = p_list->next;
-	}
-	
-	if (p_list->next)
-	{
-		p_list->next->last = p_list->last;
-	}
-	else if (!p_list->next)
-	{
-		_list = p_list->last;
-	}
-
-	SockListDtor(&p_list);
-
-	return(VALID);
-}
-static void *SockListClear(void *_socklist)
+static void *SockListClear(void *_self)
 {
 	sockList *p_socklist = NULL;
-	p_socklist = (sockList*)_socklist;
+	p_socklist = (sockList*)_self;
 
 	if (!p_socklist) { return(NULL); }
 
-	sockList *p_list, *tmp_list;
-	p_list = p_socklist;
-	tmp_list = p_socklist;
+	Node *p_node, *tmp_node;
+	p_node = p_socklist->head;
 
-	int found = 0;
-
-	while (p_list)
+	void *result = NULL;
+	while (p_node)
 	{
-		tmp_list = p_list->last;
-		SockListDtor(&p_list);
-		p_list = tmp_list;
+		tmp_node = p_node->next;
+		result = NodeDtor(p_node);
+		if(!result) { return(NULL); }
 	}
-
+	
 	return(VALID);
 }
 
@@ -257,7 +287,7 @@ static void *SockInfoSetHost(void *_self, void *_hostname)
 	size_t _hostlen;
 	_hostlen = strlen(_hostname);
 
-	p_sockinfo->hostname = malloc(sizeof(*p_sockinfo->hostname) * (_hostlen + 1));
+	p_sockinfo->hostname = calloc(_hostlen + 1, sizeof(*p_sockinfo->hostname));
 	if (!p_sockinfo->hostname) { return(NULL); }
 
 	strcpy(p_sockinfo->hostname, p_hostname);
@@ -294,7 +324,7 @@ sockServer *ServerInit()
 
 	server->data = _data;
 	
-	void *sucess = SockListCtor(&_list,server, SOCKT_SERVER);
+	void *sucess = SockListAdd(_list, server, ServerDtor);
 	if (!sucess) { return(NULL); }
 
 	return(server);
@@ -329,7 +359,7 @@ sockClient *ClientInit()
 
 	client->data = _data;
 
-	void *sucess = SockListCtor(&_list, client, SOCKT_CLIENT);
+	void *sucess = SockListAdd(_list, client, ClientDtor);
 	if (!sucess) { return(NULL); }
 
 	return(client);
@@ -519,42 +549,39 @@ static void *ServerStart(void *_self)
 	p_socklist = SockListInit();
 	if (!p_socklist) { return(NULL); }
 
-	sockInfo *p_sockinfo = NULL;
+	sockInfo *p_sockinfo;
 	p_sockinfo = SockInfoInit();
 	if (!p_sockinfo) { return(NULL); }
 
 	SockInfoCtor(p_sockinfo, _data->sock);
 	SockInfoSetHost(p_sockinfo, "SERVER");
-	SockListCtor(&p_socklist, p_sockinfo, SOCKT_FILE);
+	SockListAdd(p_socklist, p_sockinfo, SockInfoDtor);
 
 	fd_set master = {0};
 	FD_ZERO(&master);
 	FD_SET(*(_data)->sock, &master);
 
-	SOCKET max_socket = *(_data)->sock;
-	SOCKET last_client = 0;
-	int result = 0;
-
-	char hostname[NI_MAXHOST];
-	sockList *p_tmpsocklist;
-	sockInfo *p_tmpsockinfo;
+	/*SOCKET max_socket = *(_data)->sock;*/
 
 	while (1)
 	{
+		
+
 		fd_set reads = {0};
 		reads = master;
 
-		if (select(0, &reads, 0, 0, 0) < 0){return(NULL);}
+		if (select(0, &reads, 0, 0, 0) < 0) { return(NULL); }
 
-		p_tmpsocklist = p_socklist;
+		Node *p_node;
+		Node *iterator = NULL;
 
-		while(p_tmpsocklist->last != NULL)
+		while( p_node = SockListNext(p_socklist, &iterator))
 		{
-			p_tmpsockinfo = (sockInfo*)p_tmpsocklist->last->data;
+			p_sockinfo = (sockInfo *)p_node->data;
 
-			if (FD_ISSET(*(p_tmpsockinfo)->sock, &reads))
+			if (FD_ISSET(*(p_sockinfo)->sock, &reads))
 			{
-				if (*(p_tmpsockinfo)->sock == *(_data)->sock)
+				if (*(p_sockinfo)->sock == *(_data)->sock)
 				{
 					//Handle new connections
 					struct sockaddr_storage client_addr;
@@ -570,30 +597,38 @@ static void *ServerStart(void *_self)
 
 					FD_SET(*socket_client, &master);
 					
-					if (*socket_client > max_socket)
-						max_socket = *socket_client;
+					/*if (*socket_client > max_socket)
+						max_socket = *socket_client;*/
+
+					char hostname[NI_MAXHOST] = {0};
 
 					getnameinfo((struct sockaddr*)&client_addr, client_len,
-						hostname, NI_MAXHOST,
+						hostname, NI_MAXHOST-1,
 						0, 0, NI_NUMERICHOST);
 
-					p_sockinfo = SockInfoInit();
-					if (!p_sockinfo) { return(NULL); }
+					sockInfo *p_tmpsockinfo;
+					p_tmpsockinfo = SockInfoInit();
+					if (!p_tmpsockinfo) { return(NULL); }
 
-					SockInfoCtor(p_sockinfo, socket_client);
-					SockInfoSetHost(p_sockinfo, hostname);
-					SockListCtor(&p_socklist, p_sockinfo, SOCKT_FILE);
+					SockInfoCtor(p_tmpsockinfo, socket_client);
+					SockInfoSetHost(p_tmpsockinfo, hostname);
+					SockListAdd(p_socklist, p_tmpsockinfo, SockInfoDtor);
 					free(socket_client);
 					socket_client = NULL;
 				}
 				else
 				{
-					FD_CLR(*p_tmpsockinfo->sock, &master);
-					TServerRequest(server, p_tmpsockinfo, p_socklist->self);
+					FD_CLR(*(p_sockinfo)->sock, &master);
+					TServerRequest(server, p_sockinfo, p_socklist);
 					//Received from client
 				}
 			}
-			p_tmpsocklist = p_tmpsocklist->last;
+			else
+			if (*(p_sockinfo)->sock == INVALID_SOCKET)
+			{
+				SockListRemove(p_socklist, p_sockinfo);
+				//Remove the socket with no connection
+			}
 		}
 	}
 
@@ -614,15 +649,12 @@ static void *ClientConnect(void *_self)
 
 	return(VALID);
 }
-static void *ServerRequest(void *_sockinfo, void *_socklist)
+static void *ServerRequest(void *_sockinfo)
 {
 	void *result = NULL;
 
 	sockInfo *p_sockinfo;
 	p_sockinfo = (sockInfo*)_sockinfo;
-
-	sockList *p_socklist;
-	p_socklist = (sockList*)_socklist;
 
 	SOCKET *p_socket;
 	p_socket = p_sockinfo->sock;
@@ -717,7 +749,7 @@ static void *ServerRequest(void *_sockinfo, void *_socklist)
 		{ 
 			free(ftp_command); 
 		}
-		SockListRemove(p_socklist, p_sockinfo);
+		*p_sockinfo->sock = INVALID_SOCKET;
 		return(NULL);
 	}
 	
@@ -894,7 +926,7 @@ static void *ClientRequest(void *_self, void *_buffer)
 				}
 			}
 		}
-		printf("DISCONECTED\n");
+		//printf("DISCONECTED\n");
 		return(NULL); 
 	}
 
@@ -1097,6 +1129,7 @@ static void *ServerRequestLS(void *_sockinfo)
 	char ***filenames = NULL;
 	u_long n_files = 0;
 
+	u_long i = 0;
 	int failed = 0;
 	do
 	{
@@ -1105,7 +1138,7 @@ static void *ServerRequestLS(void *_sockinfo)
 
 		void *result = NULL;
 		result = FileNamesOnDir(p_sockinfo->current_dir, filenames, &n_files);
-		if (!result) { failed++; break; }
+		if (!result && !filenames) { failed++; break; }
 
 		u_long ul_nfiles = htonl(n_files);
 
@@ -1123,7 +1156,6 @@ static void *ServerRequestLS(void *_sockinfo)
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
 		memset(recvbuffer, 0, recvlen);
 
-		u_long i = 0;
 		for (i = 0; i < n_files; ++i)
 		{
 			sendbytes = send(*p_socket, (*filenames)[i], strlen((*filenames)[i]), 0);
@@ -1139,24 +1171,30 @@ static void *ServerRequestLS(void *_sockinfo)
 			memset(recvbuffer, 0, recvlen);
 		}
 
-		if (failed)
-		{
-			for (u_long j = n_files; j > i; )
-			{
-				if ((*filenames)[i]) //i think is safe, but have warning;
-					free((*filenames)[i]);
-			}
-			free(*filenames);
-			free(filenames);
-			break;
-		}
+		if(failed) { break; }
 
 		free(*filenames);
 		free(filenames);
 
 	}while (0);
-
-	if (failed) { return(NULL); }
+	// pyramids egito 
+	if (failed) 
+	{ 
+		if (filenames)
+		{
+			if (*filenames)
+			{
+				for (u_long j = n_files; j > i; --j)
+				{
+					if ((*filenames)[i]) // do I forget something ?
+					free((*filenames)[i]);
+				}
+				free(*filenames);
+			}
+			free(filenames);
+		}
+		return(NULL); 
+	}
 
 	return(VALID);
 }
@@ -1987,7 +2025,6 @@ static void *ClientRequestHELP()
 	return(VALID);
 }
 
-
 static int recv_s(SOCKET _socket, char *buf, int len, int flags)
 {
 	// flag = 0 (char*)   flag = 1 (randomtype*)
@@ -2593,3 +2630,4 @@ void *QuickServerFTP(void **_server, void *_address)
 
 	return(VALID);
 }
+//setar socket para invalido e remover no loop do server start;
