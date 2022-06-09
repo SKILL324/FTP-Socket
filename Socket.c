@@ -2535,8 +2535,6 @@ static void *TServerRequest(void *_self, void *_sockinfo, void *_socklist)
 		if (!sucess) { failed++; break; }
 		else
 		{
-			if(pthread_once(&_once, (void (_cdecl*)(void))ServerRequest))
-			{ failed++; break; }
 			if(pthread_create(&_data->Trequest, NULL, TSocketBuild, p_tsocket))
 			{ failed++; break; }
 		}
@@ -2583,8 +2581,6 @@ static void *TClientRequest(void *_self, void *_request)
 		if (!sucess) { failed++; break; }
 		else
 		{
-			if(pthread_once(&_once, (void (_cdecl*)(void))ClientRequest))
-			{ failed++; break; }
 			if(pthread_create(&_data->Trequest, NULL, TSocketBuild, p_tsocket))
 			{ failed++; break; }
 		}
