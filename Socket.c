@@ -672,7 +672,7 @@ static void *ServerRequest(void *_sockinfo)
 		int recvlen = DEFAULT_BUFLEN-1;
 
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0 || recvbytes > (int)SIZE_COMMAND) { failed++; break; }
 
 		ftp_command = malloc(sizeof(*ftp_command) * strlen(recvbuffer) + 1);
@@ -1150,7 +1150,7 @@ static void *ServerRequestLS(void *_sockinfo)
 		int recvlen = DEFAULT_BUFLEN-1;
 
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1164,7 +1164,7 @@ static void *ServerRequestLS(void *_sockinfo)
 			free((*filenames)[i]);
 			(*filenames)[i] = NULL;
 
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes <= 0) { failed++; break; }
 
 			if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1212,7 +1212,7 @@ static void *ClientRequestLS(void *_socket)
 
 		u_long n_files = 0;
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, (char *)&n_files, sizeof(n_files), 1);
+		recvbytes = recv(*p_socket, (char *)&n_files, sizeof(n_files), 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		n_files = ntohl(n_files);
@@ -1225,11 +1225,11 @@ static void *ClientRequestLS(void *_socket)
 
 		for (u_long i = 0; i < n_files; ++i)
 		{
-			memset(recvbuffer, 0, recvlen);
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes <= 0) { failed++; break; }
 
 			printf("%s\n", recvbuffer);
+			memset(recvbuffer, 0, recvlen);
 
 			sendbytes = send(*p_socket, STR_OK, (int)strlen(STR_OK), 0);
 			if (sendbytes <= 0) { failed++; break; }
@@ -1264,7 +1264,7 @@ static void *ServerRequestCD(void *_sockinfo)
 
 		u_long n_items = 0;
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, (char*)&n_items, sizeof(n_items), 1);
+		recvbytes = recv(*p_socket, (char*)&n_items, sizeof(n_items), 0);
 		if(recvbytes <= 0) { failed++; break; }
 		
 		n_items = ntohl(n_items);
@@ -1277,7 +1277,7 @@ static void *ServerRequestCD(void *_sockinfo)
 			char recvbuffer[DEFAULT_BUFLEN] = {0};
 			int recvlen = DEFAULT_BUFLEN-1;
 
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes <= 0) { failed++; break; }
 
 			tmp_alloc = malloc(sizeof(*tmp_alloc) * (strlen(recvbuffer) + strlen(*current_dir) + 1));
@@ -1372,7 +1372,7 @@ static void *ClientRequestCD(void *_socket, void *_items, u_long n_items)
 		int recvlen = DEFAULT_BUFLEN-1;
 
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if(recvbytes <= 0) { failed++; break; }
 
 		if(strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1382,7 +1382,7 @@ static void *ClientRequestCD(void *_socket, void *_items, u_long n_items)
 		sendbytes = send(*p_socket, (const char*)&ln_items, sizeof(ln_items), 0);
 		if(sendbytes <= 0) { failed++; break; }
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if(recvbytes <= 0) { failed++; break; }
 
 		if(strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1394,7 +1394,7 @@ static void *ClientRequestCD(void *_socket, void *_items, u_long n_items)
 			if(sendbytes <= 0) { failed++; break; }
 		}
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if(recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1452,7 +1452,7 @@ static void *ClientRequestPWD(void *_socket)
 		int recvlen = DEFAULT_BUFLEN-1;
 
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		printf("Current Folder:%s\n", recvbuffer);
@@ -1490,7 +1490,7 @@ static void *ServerRequestPUT(void *_sockinfo, u_long n_items)
 			int recvlen = DEFAULT_BUFLEN-1;
 
 			int recvbytes;
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes <= 0) { failed++; break; }
 			
 			size_t filenamelen = strlen(recvbuffer) + strlen(p_current_dir);
@@ -1508,8 +1508,8 @@ static void *ServerRequestPUT(void *_sockinfo, u_long n_items)
 			sendbytes = send(*p_socket, STR_OK, (int)strlen(STR_OK), 0);
 			if (sendbytes <= 0) { failed++; break; }
 
-			int filesize;
-			recvbytes = recv_s(*p_socket, (char *)&filesize, sizeof(filesize), 1);
+			int filesize = 0;
+			recvbytes = recv(*p_socket, (char *)&filesize, sizeof(filesize), 0);
 			if (recvbytes <= 0) { failed++; break; }
 			filesize = ntohl(filesize);
 
@@ -1520,12 +1520,12 @@ static void *ServerRequestPUT(void *_sockinfo, u_long n_items)
 			size_t write = 0;
 			while (read < filesize)
 			{
-				recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+				recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 				if(recvbytes <= 0) { failed++; break; }
 
 				read += recvbytes;
 				
-				write = fwrite(recvbuffer, sizeof(*recvbuffer), recvlen, file);
+				write = fwrite(recvbuffer, sizeof(*recvbuffer), recvbytes, file);
 				if(write <= 0) { failed++; break; }
 
 				memset(recvbuffer, 0, recvlen);
@@ -1597,7 +1597,7 @@ static void *ClientRequestPUT(void *_socket, void **_items, u_long n_items)
 		sendbytes = send(*p_socket, (const char*)p_item[i], (int)strlen(p_item[i]), 0);
 		if (sendbytes <= 0) { failed++; break; }
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1609,7 +1609,7 @@ static void *ClientRequestPUT(void *_socket, void **_items, u_long n_items)
 		sendbytes = send(*p_socket, (const char *)&l_filesize, sizeof(l_filesize), 0);
 		if (sendbytes < 0) { failed++; break; }
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 		
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
@@ -1619,15 +1619,18 @@ static void *ClientRequestPUT(void *_socket, void **_items, u_long n_items)
 		int sendlen = DEFAULT_BUFLEN-1;
 
 		u_long read = 0;
-		while (!feof(file) || read < filesize)
+		u_long total_read = 0;
+		while (total_read < filesize)
 		{
-			read += fread(sendbuffer, sizeof(*sendbuffer), sendlen, file);
+			read = fread(sendbuffer, sizeof(*sendbuffer), sendlen, file);
 			if(ferror(file) != 0) { failed++; break; }
 
-			sendbytes = send(*p_socket, sendbuffer, sendlen, 0);
-			if(sendbytes < 0) { failed++; break; }
+			total_read += read;
 
-			memset(sendbuffer, 0, sendlen);
+			sendbytes = send(*p_socket, sendbuffer, read, 0);
+			if(sendbytes <= 0) { failed++; break; }
+
+			memset(sendbuffer, 0, read);
 		}
 
 		if(failed) { break; }
@@ -1668,7 +1671,7 @@ static void *ServerRequestGET(void *_socket, u_long n_items)
 			int recvlen = DEFAULT_BUFLEN-1;
 
 			int recvbytes;
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes < 0) { failed++; break; }
 
 			size_t filenamelen = strlen(recvbuffer) + strlen(STR_SERVER_DIR);
@@ -1692,7 +1695,7 @@ static void *ServerRequestGET(void *_socket, u_long n_items)
 			sendbytes = send(*p_socket, (const char *)&l_filesize, sizeof(l_filesize), 0);
 			if (sendbytes <= 0) { failed++; break; }
 
-			recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+			recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 			if (recvbytes <= 0) { failed++; break; }
 
 			if (strcmp(STR_OK, recvbuffer) != 0) { failed++; break; }
@@ -1701,15 +1704,18 @@ static void *ServerRequestGET(void *_socket, u_long n_items)
 			int sendlen = DEFAULT_BUFLEN -1;
 
 			size_t read = 0;
-			while (!feof(file) || read < filesize)
+			size_t total_read = 0;
+			while (total_read < filesize)
 			{
-				read += fread(sendbuffer, sizeof(*sendbuffer), sendlen, file);
+				read = fread(sendbuffer, sizeof(*sendbuffer), sendlen, file);
 				if (ferror(file) != 0) { failed++; break; }
 
-				sendbytes = send(*p_socket, sendbuffer, sendlen, 0);
+				total_read += read;
+
+				sendbytes = send(*p_socket, sendbuffer, read, 0);
 				if (sendbytes <= 0) { failed++; break; }
 
-				memset(sendbuffer, 0, sendlen);
+				memset(sendbuffer, 0, read);
 			}
 
 			if(failed) { break; }
@@ -1753,10 +1759,11 @@ static void *ClientRequestGET(void *_socket, void **_items, u_long n_items)
 		if (sendbytes <= 0) { failed++; break; }
 
 		int recvbytes;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(recvbuffer, STR_OK) != 0) { failed++; break; }
+		memset(recvbuffer, 0, recvlen);
 
 		for (int i = 0; i < (int)n_items; ++i)
 		{
@@ -1774,26 +1781,27 @@ static void *ClientRequestGET(void *_socket, void **_items, u_long n_items)
 			sendbytes = send(*p_socket, (const char *)pp_item[i], (int)strlen(pp_item[i]), 0);
 			if (sendbytes <= 0) { failed++; break; }
 
-			int filesize;
-			recvbytes = recv_s(*p_socket, (char *)&filesize, sizeof(filesize), 1);
+			u_long filesize = 0;
+			recvbytes = recv(*p_socket, (char *)&filesize, sizeof(filesize), 0);
 			if (recvbytes <= 0) { failed++; break; }
 			filesize = ntohl(filesize);
 			
 			sendbytes = send(*p_socket, STR_OK, (int)strlen(STR_OK), 0);
 			if (sendbytes <= 0) { failed++; break; }
 
-			int read = 0;
+			u_long read = 0;
 			size_t write = 0;
 			while (read < filesize)
-			{
-				memset(recvbuffer, 0, recvlen);
-				recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
-				if (recvbytes < 0) { failed++; break; }
+			{			
+				recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
+				if (recvbytes <= 0) { failed++; break; }
 
 				read += recvbytes;
 				
-				write = fwrite(recvbuffer, sizeof(*recvbuffer), recvlen, file);
+				write = fwrite(recvbuffer, sizeof(*recvbuffer), recvbytes, file);
 				if(write != recvbytes) { failed++; break; }
+
+				memset(recvbuffer, 0, recvbytes);
 			}
 
 			if(failed) { break; }
@@ -1830,9 +1838,9 @@ static void *ServerRequestMPUT(void *_sockinfo)
 		sendbytes = send(*p_socket, STR_OK, (int)strlen(STR_OK), 0);
 		if (sendbytes <= 0) { failed++; break; }
 
-		u_long n_items;
+		u_long n_items = 0;
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, (char *)&n_items, sizeof(n_items), 1);
+		recvbytes = recv(*p_socket, (char *)&n_items, sizeof(n_items), 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		n_items = ntohl(n_items);
@@ -1869,7 +1877,7 @@ static void *ClientRequestMPUT(void *_socket, void **_items, u_long n_items)
 		int recvlen = DEFAULT_BUFLEN;
 
 		int recvbytes;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes < 0) { failed++; break; }
 
 		if (strcmp(STR_OK, recvbuffer) != 0) { failed++; break; }
@@ -1881,7 +1889,7 @@ static void *ClientRequestMPUT(void *_socket, void **_items, u_long n_items)
 		sendbytes = send(*p_socket, (const char *)&n_files, sizeof(n_files), 0);
 		if (sendbytes < 0) { failed++; break; }
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes < 0) { failed++; break; }
 		if (strcmp(STR_OK, recvbuffer) != 0) { failed++; break; }
 
@@ -1909,7 +1917,7 @@ static void *ServerRequestMGET(void *_socket)
 
 		u_long n_items = 0;
 		int recvbytes = 0;
-		recvbytes = recv_s(*p_socket, (char *)&n_items, sizeof(n_items), 1);
+		recvbytes = recv(*p_socket, (char *)&n_items, sizeof(n_items), 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		n_items = ntohl(n_items);
@@ -1946,7 +1954,7 @@ static void *ClientRequestMGET(void *_socket, void **_items, u_long n_items)
 		int recvlen = DEFAULT_BUFLEN;
 
 		int recvbytes;
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(STR_OK, recvbuffer) != 0) { failed++; break; }
@@ -1958,7 +1966,7 @@ static void *ClientRequestMGET(void *_socket, void **_items, u_long n_items)
 		sendbytes = send(*p_socket, (const char *)&n_files, sizeof(n_files), 0);
 		if (sendbytes <= 0) { failed++; break; }
 
-		recvbytes = recv_s(*p_socket, recvbuffer, recvlen, 0);
+		recvbytes = recv(*p_socket, recvbuffer, recvlen, 0);
 		if (recvbytes <= 0) { failed++; break; }
 
 		if (strcmp(STR_OK, recvbuffer) != 0) { failed++; break; }
@@ -2025,23 +2033,6 @@ static void *ClientRequestHELP()
 	return(VALID);
 }
 
-static int recv_s(SOCKET _socket, char *buf, int len, int flags)
-{
-	// flag = 0 (char*)   flag = 1 (randomtype*)
-	int trigger = 0;
-	int recvbytes = 0;
-	
-	for(int trigger = 0; trigger < 2; ++trigger)
-	{
-		recvbytes = recv(_socket, buf, len, 0);
-		if (recvbytes == len && strlen(buf) == 0 && !flags) { continue; }
-		else { break; }
-	}
-
-	if (trigger >= 2){ return(0); }
-
-	return(recvbytes);
-}
 static void *ThreadGet(void *thread)
 {
 	pthread_t *p_thread;

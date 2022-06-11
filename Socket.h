@@ -175,7 +175,6 @@ static void *ClientRequestOPEN(void *, void *);
 static void *ClientRequestCLOSE(void *);
 static void *ClientRequestHELP();
 
-static int recv_s(SOCKET, char *, int, int);
 static void *ThreadGet(void *);
 static void *ThreadCancel(void *);
 
